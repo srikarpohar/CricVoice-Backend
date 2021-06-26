@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+      "outDir": "dist",
+      "allowJs": true,
+      "target": "es2017",
+      "sourceMap": true,
+      "moduleResolution": "node",
+      "module": "ESNext",
+      "esModuleInterop": true,
+      "allowSyntheticDefaultImports": true
+    },
+    "include": ["./cricvoice-backend/**/*.ts","./server.ts"],
+    "exclude": ["node_modules", "**/*.spec.ts"]
+}
