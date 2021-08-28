@@ -10,6 +10,7 @@ import { CONSTANTS } from '../constants.js';
 import { Users } from '@prisma/client';
 import { initializeMulter } from '../utils/fileUploadUtils.js';
 import fs from 'fs-extra';
+import { onUploadMiddleware } from '../middleware/onUploadMiddleware.js';
 
 const { compare, hash } = bcrypt_lib;
 const { sign } = jwt;
@@ -39,10 +40,8 @@ export default class AuthController {
     });
 
     uploadProfilePic = asyncHandler( async(req, res) => {
-        let upload = initializeMulter(assetsPath);
-        upload = upload.single('profilePic');
-    
-        upload(req, res, function (err) {
+
+        const onProfilePicUpload = (err) => {
             if (err) {
                 return resMiddleware(res, null, false, 500, err.message);
             }
@@ -63,8 +62,9 @@ export default class AuthController {
                     return resMiddleware(res, user, true, 200);
                 })
             });
-        
-        });
+        }
+
+        onUploadMiddleware('profilePic', req, res, onProfilePicUpload);
     })
 
     // sign in user controller

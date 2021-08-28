@@ -2,7 +2,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs-extra';
 
-export const initializeMulter = (dest: string, filename?: string) => {
+export const initializeMulter = (dest: string, filename?: string, filesize?: number) => {
     const storage = multer.diskStorage({
         destination: function(req, file, cb) {
             fs.mkdirsSync(dest);
@@ -19,7 +19,7 @@ export const initializeMulter = (dest: string, filename?: string) => {
         } else {
             cb(null, false);
         }
-    }, upload = multer({ storage, fileFilter, limits:{fileSize: 1000000}, });
+    }, upload = multer({ storage, fileFilter, limits:{fileSize: filesize ? filesize : 1000000}, });
 
     return upload;
 }
