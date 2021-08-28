@@ -28,6 +28,10 @@ model Users {
                               // android: {token: string, expiryDate: Date}, 
                               // ios: {token: string, expiryDate: Date}}
   preference Preference?
+  profilePic String? @db.Uuid
+
+  // relation to attachments
+  profilePicRel Attachment? @relation(fields: [profilePic], references: [id])
 
   @@map(name: "users")
   @@unique([firstName, lastName], name: "Users.firstName_lastName_unique")
@@ -40,4 +44,18 @@ model Preference {
   user Users? @relation(fields: [userId], references: [id])
   userId String @db.Uuid // users foreign key(doesnt exist in db).
   theme Theme @default(default)
+
+  @@map(name: "preferences")
+}
+
+model Attachment {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  url String
+  filename String
+  filetype String
+
+  // relation to users
+  user Users?
+
+  @@map(name: "attachments")
 }

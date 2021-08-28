@@ -9,13 +9,17 @@ import setAuthRouter from './cricvoice-backend/routes/auth.routes.js';
 import cookie_parser from 'cookie-parser';
 import { verifyToken } from './cricvoice-backend/middleware/authJwt.js';
 import pkg from 'morgan';
+import setPreferenceRouter from './cricvoice-backend/routes/preference.route.js';
+import path from 'path';
 
 async function getAllRoutes() {
-    const userRoutes = await setUserRouter();
-    const authRoutes = await setAuthRouter();
+    const userRoutes = await setUserRouter(),
+        authRoutes = await setAuthRouter(),
+        preferenceRoutes = await setPreferenceRouter();
     return {
         userRoutes: userRoutes,
-        authRoutes: authRoutes
+        authRoutes: authRoutes,
+        preferenceRoutes: preferenceRoutes
     };
 }
 
@@ -40,6 +44,9 @@ async function setup() {
         // use cors for specifying origin from where request could me made.
         app.use(cors(corsOptions));
 
+        // make static files public
+        app.use(express.static(path.join(process.env.FRONT_END_URL, "./public/")));
+
         // sign response cookies and get signed cookies from request.
         const cookieParser = cookie_parser;
         app.use(cookieParser(process.env.COOKIES_SECRET));
@@ -57,7 +64,8 @@ async function setup() {
         // get all the routes and map them to url patterns.
         const routes = await getAllRoutes();
         app.use('/', routes.authRoutes);
-        app.use('/users', verifyToken, routes.userRoutes);
+        app.use('/users', [verifyToken], routes.userRoutes);
+        app.use('/preference', [verifyToken], routes.preferenceRoutes);
     
         const PORT = process.env.PORT || 4200
     

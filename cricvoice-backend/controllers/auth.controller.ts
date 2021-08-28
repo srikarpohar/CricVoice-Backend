@@ -1,12 +1,15 @@
 import asyncHandler from 'express-async-handler';
-import { createUser, getByUsername, updateRefreshToken, getByRefreshToken } from '../services/auth.service.js';
+import { createUser, getByUsername, updateRefreshToken, getByRefreshToken, createProfilePicAttachmentForUser } from '../services/auth.service.js';
 import { resMiddleware } from '../middleware/resMiddleware.js';
 import jwt from 'jsonwebtoken';
 import bcrypt_lib from 'bcrypt';
 import { v4 } from 'uuid';
-import { secret, authTokenExpiry, authRefreshTokenExpiry } from '../config/auth.config.js';
+import { secret, authTokenExpiry, authRefreshTokenExpiry, assetsPath } from '../config/auth.config.js';
 import RedisUtils from '../utils/redisUtils.js';
 import { CONSTANTS } from '../constants.js';
+import { Users } from '@prisma/client';
+import { initializeMulter } from '../utils/fileUploadUtils.js';
+import fs from 'fs-extra';
 
 const { compare, hash } = bcrypt_lib;
 const { sign } = jwt;
@@ -23,9 +26,9 @@ export default class AuthController {
         try {
             const saltRounds = 5;
             req.body.password = await hash(req.body.password, saltRounds);
-            createUser(req.body).then(user => {
-                resMiddleware(res, user, true, 200);
-                return;
+            // const inputData = {...req.body, profilePicType: req.file.mimetype, profilePicName: req.file.filename, };
+            createUser(req.body).then((user:Users) => {
+                return resMiddleware(res, user, true, 200);
             }).catch(error => {
                 return resMiddleware(res, null, false, 500, error.message);
             });
@@ -34,6 +37,35 @@ export default class AuthController {
             return;
         }
     });
+
+    uploadProfilePic = asyncHandler( async(req, res) => {
+        let upload = initializeMulter(assetsPath);
+        upload = upload.single('profilePic');
+    
+        upload(req, res, function (err) {
+            if (err) {
+                return resMiddleware(res, null, false, 500, err.message);
+            }
+        
+            var dir = req.body.id;
+            var filename = req.file.filename;
+        
+            fs.move(assetsPath + '/' + filename, assetsPath + '/' + dir + '/' + filename, function (err) {
+                if (err) {
+                    return resMiddleware(res, null, false, 500, err.message);
+                }
+                
+                fs.remove(assetsPath + '/' + filename, async function(err) {
+                    if(err) {
+                        return resMiddleware(res, null, false, 500, err.message);
+                    }
+                    const user = await createProfilePicAttachmentForUser(dir, '/' + dir + '/' + filename, filename, req.file.mimetype)
+                    return resMiddleware(res, user, true, 200);
+                })
+            });
+        
+        });
+    })
 
     // sign in user controller
     signInUser = asyncHandler(async (req, res) => {
@@ -113,7 +145,7 @@ export default class AuthController {
             const isTokenExpired = (user.refreshToken["web"]["expiryDate"] < new Date().getTime());
             if (isTokenExpired) {
                 user = await updateRefreshToken({ user_id: user.id, refreshToken: '', expiryDate: 0 });
-                resMiddleware(res, null, false, 403, "Refresh token was expired. Please make a new signin request", false);
+                resMiddleware(res, null, false, 401, "Refresh token was expired. Please make a new signin request", false);
                 return;
             }
 

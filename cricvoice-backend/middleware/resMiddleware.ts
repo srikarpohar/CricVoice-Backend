@@ -7,11 +7,11 @@ type response = Users
                 | null;
 
 export const resMiddleware = (res:Response, data: response | Partial<response> | response[] | Partial<response>[], success: Boolean, status: Number, errMessage?: string, retry?: boolean) => {
-    res.send({
+    res.status(status).send({
         data: data,
         success: success,
         statusCode: status,
         errorMessage: errMessage ? errMessage : '',
         retry: retry
-    })   
+    });   
 }

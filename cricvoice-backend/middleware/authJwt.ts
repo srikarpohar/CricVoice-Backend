@@ -15,13 +15,13 @@ const catchError = (err, res) => {
 export const verifyToken = (req, res, next) =>{
     try {
         // TODO: write logic for retrieving token based on device.
-        //const rawAuthHeader:string[] = req.headers['Authorization'].split(' ');
-        const token = req.headers['Authorization'];//rawAuthHeader.length ? rawAuthHeader[1] : '';
+        const token = req.headers['authorization'].split(' ').length > 1 ? req.headers['authorization'].split(' ')[1] : '';
         if(!token) {
             return resMiddleware(res, null, false, 401, "No authentication token provided!");
         }
 
         verify(token, secret, (err, decoded) => {
+            console.log(err);
             if (err) {
                 return catchError(err, res);
             }

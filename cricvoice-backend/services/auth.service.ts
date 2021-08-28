@@ -5,9 +5,34 @@ export const createUser = (data: Users) => prismaClient.users.create({
     data: data
 });
 
+export const createProfilePicAttachmentForUser = async (id: string, url: string, filename: string, filetype: string) => {
+    const attachment = await prismaClient.attachment.create({
+        data: {
+            url: url,
+            filename: filename,
+            filetype: filetype
+        }
+    })
+    const user = await prismaClient.users.update({
+        where: {
+            id: id
+        }, 
+        data: {
+            profilePic: attachment.id
+        },
+        include: {
+            profilePicRel: true
+        }
+    });
+    return user;
+}
+
 export const getByUsername = (username: string) => prismaClient.users.findUnique({
     where: {
         username: username
+    },
+    include: {
+        preference: true
     }
 });
 
@@ -25,6 +50,9 @@ export const getByUsernameOrEmail = (data: { username: string, email: string }) 
                 }
             }
         ]
+    },
+    include: {
+        preference: true
     }
 });
 
@@ -34,6 +62,9 @@ export const getByRefreshToken = (token: string) => prismaClient.users.findFirst
             path: ['web', 'token'],
             equals: token
         }
+    },
+    include: {
+        preference: true
     }
 });
 
@@ -48,6 +79,9 @@ export const updateRefreshToken = (data: { user_id: string, refreshToken: string
         },
         where: {
             id: data.user_id
+        },
+        include: {
+            preference: true
         }
     })
 }

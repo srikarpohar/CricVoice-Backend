@@ -10,6 +10,9 @@ export default async function setAuthRouter() {
     // route for signup
     router.post('/signup', checkDuplicateUsernameOrEmail, userController.signUpUser);
 
+    // route for uploading profilepic after signup
+    router.post('/signup/upload', userController.uploadProfilePic);
+
     // route for sign in
     router.get('/login', userController.signInUser);
 

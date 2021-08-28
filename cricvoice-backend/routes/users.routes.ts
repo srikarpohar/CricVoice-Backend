@@ -3,7 +3,7 @@ import express from 'express';
 
 export default async function setUserRouter() {
     const userController = new UserController();
-
+    
     const router = express.Router();
 
     // express router method to create route for getting all users
