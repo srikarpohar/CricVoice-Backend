@@ -28,7 +28,8 @@ async function setup() {
         console.log('Starting Setup');
 
         // dotenv config
-        dotenv.config()
+        dotenv.config();
+        const env = process.env.NODE_ENV;
         
         //connect database
         await prismaClient.$connect()
@@ -36,7 +37,7 @@ async function setup() {
     
         const app = express();
         const corsOptions = {
-            origin: process.env.FRONT_END_URL,
+            origin: [process.env.FRONT_END_URL, process.env.ASSETS_PATH],
             credentials: true,
             allowedHeaders: ['Authorization', 'Content-Type', 'Origin', 'Accept']
         };
@@ -45,7 +46,7 @@ async function setup() {
         app.use(cors(corsOptions));
 
         // make static files public
-        app.use(express.static(path.join(process.env.FRONT_END_URL, "./public/")));
+        app.use('/static', express.static(path.join(path.resolve(path.dirname('')), process.env.ASSETS_PATH)));
 
         // sign response cookies and get signed cookies from request.
         const cookieParser = cookie_parser;

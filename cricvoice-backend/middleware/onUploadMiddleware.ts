@@ -2,8 +2,8 @@ import { assetsPath } from "../config/auth.config.js";
 import { initializeMulter } from "../utils/fileUploadUtils.js";
 import { resMiddleware } from "./resMiddleware.js";
 
-export const onUploadMiddleware = async (uploadKey: string, req: any, res: any, onUploadFn?: Function) => {
-    let upload = initializeMulter(assetsPath);
+export const onUploadMiddleware = async (folder: string,uploadKey: string, req: any, res: any, onUploadFn?: Function) => {
+    let upload = initializeMulter(assetsPath + "/" + folder);
     upload = upload.single(uploadKey);
 
     if(onUploadFn) {

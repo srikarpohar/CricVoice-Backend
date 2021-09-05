@@ -32,7 +32,8 @@ export const getByUsername = (username: string) => prismaClient.users.findUnique
         username: username
     },
     include: {
-        preference: true
+        preference: true,
+        profilePicRel: true
     }
 });
 
@@ -64,7 +65,8 @@ export const getByRefreshToken = (token: string) => prismaClient.users.findFirst
         }
     },
     include: {
-        preference: true
+        preference: true,
+        profilePicRel: true
     }
 });
 
@@ -81,7 +83,8 @@ export const updateRefreshToken = (data: { user_id: string, refreshToken: string
             id: data.user_id
         },
         include: {
-            preference: true
+            preference: true,
+            profilePicRel: true
         }
     })
 }

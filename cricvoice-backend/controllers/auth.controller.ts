@@ -49,12 +49,12 @@ export default class AuthController {
             var dir = req.body.id;
             var filename = req.file.filename;
         
-            fs.move(assetsPath + '/' + filename, assetsPath + '/' + dir + '/' + filename, function (err) {
+            fs.move(assetsPath + '/profilePics/' + filename, assetsPath + '/profilePics/' + dir + '/' + filename, function (err) {
                 if (err) {
                     return resMiddleware(res, null, false, 500, err.message);
                 }
                 
-                fs.remove(assetsPath + '/' + filename, async function(err) {
+                fs.remove(assetsPath + '/profilePics/' + filename, async function(err) {
                     if(err) {
                         return resMiddleware(res, null, false, 500, err.message);
                     }
@@ -64,7 +64,7 @@ export default class AuthController {
             });
         }
 
-        onUploadMiddleware('profilePic', req, res, onProfilePicUpload);
+        onUploadMiddleware('profilePics', 'profilePic', req, res, onProfilePicUpload);
     })
 
     // sign in user controller
