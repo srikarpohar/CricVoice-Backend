@@ -8,7 +8,6 @@ import { secret, authTokenExpiry, authRefreshTokenExpiry, assetsPath } from '../
 import RedisUtils from '../utils/redisUtils.js';
 import { CONSTANTS } from '../constants.js';
 import { Users } from '@prisma/client';
-import { initializeMulter } from '../utils/fileUploadUtils.js';
 import fs from 'fs-extra';
 import { onUploadMiddleware } from '../middleware/onUploadMiddleware.js';
 

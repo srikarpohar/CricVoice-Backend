@@ -10,7 +10,7 @@
     "build": "tsc",
     "dbmigrate-dev": "npx prisma migrate dev",
     "dbgenerate": "npx prisma generate",
-    "start": "node --loader ts-node/esm server.ts"
+    "start": "node --inspect --loader ts-node/esm server.ts"
   },
   "prisma": {
     "schema": "./cricvoice-backend/prisma/schema.dev.prisma"
