@@ -1,9 +1,12 @@
 import prismaClient from '../config/db.config.js';
 import { Users } from '@prisma/client';
 
-export const createUser = (data: Users) => prismaClient.users.create({
-    data: data
-});
+export const createUser = async (data: Users) => {
+    const user = await prismaClient.users.create({
+        data: data
+    });
+    return user;
+};
 
 export const createProfilePicAttachmentForUser = async (id: string, url: string, filename: string, filetype: string) => {
     const attachment = await prismaClient.attachment.create({
@@ -27,15 +30,18 @@ export const createProfilePicAttachmentForUser = async (id: string, url: string,
     return user;
 }
 
-export const getByUsername = (username: string) => prismaClient.users.findUnique({
-    where: {
-        username: username
-    },
-    include: {
-        preference: true,
-        profilePicRel: true
-    }
-});
+export const getByUsername = async (username: string) => {
+    const user = await prismaClient.users.findUnique({
+        where: {
+            username: username
+        },
+        include: {
+            preference: true,
+            profilePicRel: true
+        }
+    });
+    return user;
+};
 
 export const getByUsernameOrEmail = (data: { username: string, email: string }) => prismaClient.users.findFirst({
     where: {

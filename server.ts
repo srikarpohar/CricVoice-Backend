@@ -11,15 +11,19 @@ import { verifyToken } from './cricvoice-backend/middleware/authJwt.js';
 import pkg from 'morgan';
 import setPreferenceRouter from './cricvoice-backend/routes/preference.route.js';
 import path from 'path';
+import setMatchesRouter from './cricvoice-backend/routes/cricket/match.routes.js';
 
 async function getAllRoutes() {
     const userRoutes = await setUserRouter(),
         authRoutes = await setAuthRouter(),
-        preferenceRoutes = await setPreferenceRouter();
+        preferenceRoutes = await setPreferenceRouter(),
+        matchRoutes = await setMatchesRouter();
+
     return {
         userRoutes: userRoutes,
         authRoutes: authRoutes,
-        preferenceRoutes: preferenceRoutes
+        preferenceRoutes: preferenceRoutes,
+        matchRoutes: matchRoutes
     };
 }
 
@@ -29,7 +33,6 @@ async function setup() {
 
         // dotenv config
         dotenv.config();
-        const env = process.env.NODE_ENV;
         
         //connect database
         await prismaClient.$connect()
@@ -67,6 +70,7 @@ async function setup() {
         app.use('/', routes.authRoutes);
         app.use('/users', [verifyToken], routes.userRoutes);
         app.use('/preference', [verifyToken], routes.preferenceRoutes);
+        app.use('/cricket/match', routes.matchRoutes);
     
         const PORT = process.env.PORT || 4200
     

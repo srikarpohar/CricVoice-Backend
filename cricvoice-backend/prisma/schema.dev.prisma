@@ -13,6 +13,100 @@ enum Theme {
   dark
 }
 
+enum TeamType {
+  International
+  National
+  League
+  Domestic
+}
+
+enum PlayerRole {
+  Batsman
+  Bowler
+  AllRounder
+}
+
+enum PlayerHand {
+  Right
+  Left
+}
+
+enum BowlersTypes {
+  Fast
+  Fast_Medium
+  Medium_Fast
+  Off_Spin
+  Leg_Spin
+}
+
+enum SeriesType {
+  Tournament
+  Bilateral
+}
+
+enum MatchType {
+  T10
+  T20
+  ODI
+  Test
+}
+
+enum TossProbabilities {
+  Heads
+  Tails
+}
+
+enum WicketType {
+  Bowled
+  Caught
+  CaughtAndBowled
+  Stump
+  RunOut
+  RunOutOnNoBall
+  Mankad
+  ObstructingField
+  HitWicket
+}
+
+enum ExtraType {
+  Bye
+  LegBye
+  Wide
+  OverWaistNoBall
+  FrontFootNoBall
+}
+
+enum BattingStatType {
+  Duck
+  GoldenDuck
+  DiamondDuck
+  Run
+  Fours
+  Sixes
+  Fifties
+  Centuries
+  OneCenturyAndFifty
+  DoubleCenturies
+  DoubleCenturyAndFifty
+  TripleCentury
+  TripleCenturyAndFifty
+  QuadrapleCentury
+  Average
+  NoneOfThese
+}
+
+enum BowlingStatType {
+  Wicket
+  Hattrick
+  DoubleHattrick
+  ThreeFor
+  FiveFor
+  TenFor
+  Maidens
+  Average
+  NoneOfThese
+}
+
 model Users {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   firstName String
@@ -28,13 +122,13 @@ model Users {
                               // android: {token: string, expiryDate: Date}, 
                               // ios: {token: string, expiryDate: Date}}
   preference Preference?
-  profilePic String? @db.Uuid
 
   // relation to attachments
+  profilePic String? @db.Uuid
   profilePicRel Attachment? @relation(fields: [profilePic], references: [id])
 
   @@map(name: "users")
-  @@unique([firstName, lastName], name: "Users.firstName_lastName_unique")
+  @@unique([firstName, lastName], name: "Users_firstName_lastName_unique")
 }
 
 model Preference {
@@ -44,6 +138,8 @@ model Preference {
   user Users? @relation(fields: [userId], references: [id])
   userId String @db.Uuid // users foreign key(doesnt exist in db).
   theme Theme @default(default)
+  showDataInList Boolean @default(false)
+  showDataInRow Boolean @default(true)
 
   @@map(name: "preferences")
 }
@@ -56,6 +152,394 @@ model Attachment {
 
   // relation to users
   user Users?
+  team Team?
 
   @@map(name: "attachments")
+}
+
+model Team {
+  id String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  name String
+  type TeamType @default(International)
+  totalRuns BigInt
+  totalBallsFaced BigInt
+  representedPlace String
+
+  // attachment relation for flag
+  flagId String? @db.Uuid
+  flag Attachment? @relation(fields: [flagId], references: [id])
+
+  // relations to other tables
+  // players relation many-many
+  players PlayersOnTeams[]
+
+  tossWonBy_Match Match? @relation(name: "tossWonBy_Match")
+  hostTeam_Match Match? @relation(name: "hostTeam_Match")
+  visTeam_Match Match? @relation(name: "visTeam_Match")
+  matchWonBy_Match Match? @relation(name: "matchWonBy_Match")
+
+  hostTeam_Series Series? @relation(name: "hostTeam_Series")
+  visTeam_Series Series? @relation(name: "visTeam_Series")
+
+  batting_team_in_inns Innings? @relation(name: "batting_team_in_inns")
+  bowling_team_in_inns Innings? @relation(name: "bowling_team_in_inns")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map(name: "teams")
+}
+
+model Player {
+  id String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  firstName String
+  lastName String
+  name String?
+  dob DateTime @db.Date
+  bornState String
+  jerseyNumber Int
+
+  mainRole PlayerRole
+  battingHand PlayerHand
+  bowlingHand PlayerHand
+  bowlingType BowlersTypes
+
+  // teams relation many-many
+  teams PlayersOnTeams[]
+
+  // batting stats of player
+  battingStats BattingStats[]
+  bowlingStats BowlingStats[]
+
+  //relation to other models
+  bowler_in_delivery Delivery? @relation("bowler_in_delivery")
+  wicket_of_player Delivery? @relation("wicket_of_player")
+  wicket_helper Delivery? @relation("wicket_helper")
+  striker_batter_in_delivery Delivery? @relation("striker_batter_in_delivery")
+  nonStriker_batter_in_delivery Delivery? @relation("nonstriker_batter_in_delivery")
+
+  bowler_in_over BowlersInOvers? @relation("bowler_in_over")
+  batter_in_over BattersInOvers? @relation("batter_in_over")
+
+  bowler_scoreboard BowlerScore? @relation("bowler_scoreboard")
+  wicket_taken_by BatterScore? @relation("wicket_taken_by")
+  batter_scoreboard BatterScore? @relation("batter_scoreboard")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map(name: "players")
+}
+
+model PlayersOnTeams {
+  teamId String @db.Uuid
+  team Team @relation(fields: [teamId], references: [id])
+  playerId String @db.Uuid
+  player Player @relation(fields: [playerId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@id([teamId, playerId])
+  @@map(name: "players_on_teams")
+}
+
+model Match {
+  id String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  hostTeamId String @db.Uuid
+  hostTeam Team @relation(name: "hostTeam_Match", fields: [hostTeamId], references: [id])
+  visTeamId String @db.Uuid
+  visTeam Team @relation(name: "visTeam_Match", fields: [visTeamId], references: [id])
+  matchStartTime DateTime @db.Timestamp()
+  matchEndTime DateTime @db.Timestamp()
+  matchNoInSeries Int? @default(1)
+
+  isNeutralVenue Boolean @default(false)
+  type MatchType
+
+  toss TossProbabilities
+  tossWonById String @db.Uuid
+  tossWonBy Team @relation(name: "tossWonBy_Match", fields: [tossWonById], references: [id])
+
+  matchWonById String @db.Uuid
+  matchWonBy Team @relation(name: "matchWonBy_Match", fields: [matchWonById], references: [id])
+
+  marginOfWinByRuns Int?
+  marginOfWinByWkts Int?
+
+  innings Innings[]
+
+  // place of the match
+  stadiumId String @db.Uuid
+  stadium Stadium @relation(fields: [stadiumId], references: [id])
+
+  // relation to other tables
+  seriesId String @db.Uuid
+  series Series @relation(fields: [seriesId], references: [id])
+  match_delivery Delivery? @relation("match_delivery")
+  match_over Over? @relation("match_over")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map(name: "matches")
+}
+
+model Innings {
+  id String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  inningsNo Int
+  isSuperOverInns Boolean? @default(false)
+  totalOvers Int @default(0)
+  totalRunsScored Int @default(0)
+  totalWicketsTaken Int @default(0)
+
+  // batting team foreign field
+  battingTeamId String @db.Uuid
+  battingTeam Team @relation(name:"batting_team_in_inns", fields: [battingTeamId], references: [id])
+
+  // bowling team foreign field
+  bowlingTeamId String @db.Uuid
+  bowlingTeam Team @relation(name:"bowling_team_in_inns", fields: [bowlingTeamId], references: [id])
+
+  // batting and bowling scoreboards
+  battingScoreBoard BatterScore[]
+  bowlingScoreboard BowlerScore[]
+
+  // match foreign field
+  matchId String @db.Uuid
+  match Match @relation(fields: [matchId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map(name: "innings")
+}
+
+model Series {
+  id String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  name String
+  startDate DateTime @db.Date
+  endDate DateTime @db.Date
+  type SeriesType
+  tournamentCountry String?
+
+  // relation to teams playing in series
+  hostTeamId String @db.Uuid
+  hostTeam Team @relation(name: "hostTeam_Series", fields: [hostTeamId], references: [id])
+  visTeamId String? @db.Uuid
+  visTeam Team? @relation(name: "visTeam_Series", fields: [visTeamId], references: [id])
+
+  // relation to matches in series
+  matches Match[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map(name: "series")
+}
+
+model Stadium {
+  id String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  name String
+  state String
+  country String
+
+  // relations to other tables
+  match Match?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map(name: "stadiums") 
+}
+
+model BatterScore {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  batterPosition Int
+  runsScored Int
+  isOut Boolean @default(false)
+
+  // fields related to batters wicket
+  wktTakenById String? @db.Uuid
+  wktTakenBy Player? @relation(name: "wicket_taken_by", fields: [wktTakenById], references: [id])
+  wktType WicketType?
+  deliveryOfBatterWkt Delivery?
+
+  // batter related fields
+  batterId String @db.Uuid
+  batter Player @relation(name: "batter_scoreboard", fields: [batterId], references: [id])
+
+  // innings foreign field
+  inningsId String @db.Uuid
+  innings Innings @relation(fields: [inningsId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map(name: "batterscores")
+}
+
+model BowlerScore {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  oversBowled Int
+  runsGiven Int
+  maidenOverNos Int[]
+  deliveriesOfWkts Delivery[]
+  extras Json @db.Json // {extraType: ExtraType, runs: number}[]
+
+  // bowler related fields
+  bowlerId String @db.Uuid
+  bowler Player @relation(name: "bowler_scoreboard", fields: [bowlerId], references: [id])
+
+  // innings foreign field
+  inningsId String @db.Uuid
+  innings Innings @relation(fields: [inningsId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map(name: "bowlerscores")
+}
+
+model BattersInOvers {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  overId String @db.Uuid
+  over Over @relation(fields: [overId], references: [id])
+  batterId String @db.Uuid
+  batter Player @relation(name: "batter_in_over", fields: [batterId], references: [id])
+
+  @@map("battersinovers")
+}
+
+model BowlersInOvers {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  overId String @db.Uuid
+  over Over @relation(fields: [overId], references: [id])
+  bowlerId String @db.Uuid
+  bowler Player @relation(name: "bowler_in_over", fields: [bowlerId], references: [id])
+  noOfDeliveriesBowled Int
+
+  @@map("bowlersinovers")
+}
+
+model Over {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  overNo Int
+  isMaidenOver Boolean @default(false)
+  isSuperOver Boolean @default(false)
+
+  // bowler related fields
+  bowlerId String @db.Uuid
+  bowler BowlersInOvers[]
+
+  //batter related fields
+  batterIds String[] @db.Uuid
+  batters BattersInOvers[]
+
+  //deliveries in over
+  deliveryIds String[] @db.Uuid
+  deliveries Delivery[]
+
+  matchId String @db.Uuid
+  match Match @relation(name: "match_over", fields: [matchId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map(name: "overs")
+}
+
+model Delivery {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  deliveryNo Int
+  commentary Commentary?
+  overStarted Boolean @default(false)
+  overCompleted Boolean @default(false)
+  legalRunsScored Int
+  extraType ExtraType?
+  extraRuns Int?
+
+  // over foreign field
+  overId String @db.Uuid
+  over Over @relation(fields: [overId], references: [id])
+
+  // bowler related fields
+  bowlerId String @db.Uuid
+  bowler Player @relation(name: "bowler_in_delivery", fields: [bowlerId], references: [id])
+  wktTaken Boolean @default(false)
+  wktType WicketType?
+  wktOfBatterId String? @db.Uuid
+  wktOfBatter Player? @relation(name: "wicket_of_player", fields: [wktOfBatterId], references: [id])
+  wktHelpedById String? @db.Uuid
+  wktHelpedBy Player? @relation(name: "wicket_helper", fields: [wktHelpedById], references: [id])
+  isWktHelperSub Boolean? @default(false)
+
+  // bowler score foreign Field
+  bowlerScoreId String? @db.Uuid
+  bowlerScore BowlerScore? @relation(fields: [bowlerScoreId], references: [id])
+
+  // batter score foreign field
+  batterScoreId String? @db.Uuid
+  batterScore BatterScore? @relation(fields: [batterScoreId], references: [id])
+
+  //batter releated fields
+  strikerBatterId String @db.Uuid
+  strikerBatter Player @relation(name: "striker_batter_in_delivery", fields: [strikerBatterId], references: [id])
+  nonStrikerBatterId String @db.Uuid
+  nonStrikerBatter Player @relation(name: "nonstriker_batter_in_delivery", fields: [nonStrikerBatterId], references: [id])
+
+  // milestones related fields
+  isBattingMilestone Boolean? @default(false)
+  isBowlingMileStone Boolean? @default(false)
+  battingMileStoneType BattingStatType?
+  bowlingMileStoneType BowlingStatType?
+
+  matchId String @db.Uuid
+  match Match @relation(name: "match_delivery", fields: [matchId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map(name: "deliveries")
+}
+
+model Commentary {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  // commentary for delivery
+  deliveryId String @db.Uuid
+  delivery Delivery @relation(fields: [deliveryId], references: [id])
+  description String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map(name: "commentaries")
+}
+
+model BattingStats {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  playerId String @db.Uuid
+  player Player @relation(fields: [playerId], references: [id])
+  statType BattingStatType
+  noOfStatType Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map(name: "battingstats")
+}
+
+model BowlingStats {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  playerId String @db.Uuid
+  player Player @relation(fields: [playerId], references: [id])
+  statType BowlingStatType
+  noOfStatType Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map(name: "bowlingstats")
 }

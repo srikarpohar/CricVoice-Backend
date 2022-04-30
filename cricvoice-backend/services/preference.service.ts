@@ -1,3 +1,4 @@
+import { Theme } from "@prisma/client";
 import prismaClient from "../config/db.config.js";
 
 export const updateUserThemePreference = (data: {userId: string, themeValue: string}) => 
@@ -8,8 +9,8 @@ export const updateUserThemePreference = (data: {userId: string, themeValue: str
         data: {
             preference: {
                 upsert: {
-                    create: {theme: data.themeValue},
-                    update: {theme: data.themeValue}
+                    create: {theme: data.themeValue as Theme},
+                    update: {theme: data.themeValue as Theme}
                 }
             }
         },

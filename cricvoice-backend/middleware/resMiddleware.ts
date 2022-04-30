@@ -4,10 +4,11 @@ import {Response} from 'express';
 
 type response = Users
                 | { user: Users, accessToken: string }
-                | null;
+                | null 
+                | {};
 
 export const resMiddleware = (res:Response, data: response | Partial<response> | response[] | Partial<response>[], success: Boolean, status: Number, errMessage?: string, retry?: boolean) => {
-    res.status(status).send({
+    res.send({
         data: data,
         success: success,
         statusCode: status,
