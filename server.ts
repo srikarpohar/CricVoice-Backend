@@ -40,7 +40,7 @@ async function setup() {
     
         const app = express();
         const corsOptions = {
-            origin: [process.env.FRONT_END_URL, process.env.ASSETS_PATH],
+            origin: [process.env.FRONT_END_URL, process.env.ADMIN_URL, process.env.ASSETS_PATH],
             credentials: true,
             allowedHeaders: ['Authorization', 'Content-Type', 'Origin', 'Accept']
         };
